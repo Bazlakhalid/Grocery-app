@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FreshMind AI Grocery</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #2D6A4F;
+    --green-light: #52B788;
+    --green-pale: #D8F3DC;
+    --gold: #E9C46A;
+    --cream: #FEFAE0;
+    --dark: #1B2C22;
+    --text: #2D3A2E;
+    --text-light: #6B7C6D;
+    --white: #FFFFFF;
+    --red: #E63946;
+    --shadow: 0 4px 24px rgba(45,106,79,0.12);
+    --shadow-lg: 0 12px 48px rgba(45,106,79,0.18);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
+
+  /* HEADER */
+  header {
+    background: var(--dark);
+    padding: 0 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 70px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  }
+  .logo { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--green-light); font-weight: 700; letter-spacing: -0.5px; }
+  .logo span { color: var(--gold); }
+  .header-right { display: flex; align-items: center; gap: 20px; }
+  .cart-btn {
+    background: var(--green); color: white; border: none; padding: 10px 22px;
+    border-radius: 50px; font-size: 0.95rem; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+    font-weight: 600;
+  }
+  .cart-btn:hover { background: var(--green-light); transform: translateY(-1px); }
+  .cart-count {
+    background: var(--gold); color: var(--dark); border-radius: 50%;
+    width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; font-weight: 700;
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, var(--dark) 0%, #1a4030 50%, var(--green) 100%);
+    padding: 60px 40px;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2352B788' fill-opacity='0.06'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: 3rem; color: white; font-weight: 900; position: relative; line-height: 1.1; }
+  .hero h1 span { color: var(--green-light); }
+  .hero p { color: rgba(255,255,255,0.75); margin-top: 14px; font-size: 1.1rem; position: relative; }
+  .ai-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(82,183,136,0.2); border: 1px solid var(--green-light);
+    color: var(--green-light); padding: 6px 16px; border-radius: 50px;
+    font-size: 0.85rem; font-weight: 600; margin-bottom: 18px; position: relative;
+  }
+  .ai-dot { width: 8px; height: 8px; background: var(--green-light); border-radius: 50%; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.3)} }
+
+  /* MAIN LAYOUT */
+  .main { max-width: 1300px; margin: 0 auto; padding: 40px 20px; display: grid; grid-template-columns: 320px 1fr; gap: 30px; }
+
+  /* SIDEBAR / AI PANEL */
+  .ai-panel {
+    background: white; border-radius: 20px; padding: 28px;
+    box-shadow: var(--shadow); height: fit-content; position: sticky; top: 90px;
+  }
+  .panel-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+  .panel-sub { font-size: 0.85rem; color: var(--text-light); margin-bottom: 22px; }
+
+  .form-group { margin-bottom: 20px; }
+  .form-label { font-size: 0.85rem; font-weight: 600; color: var(--dark); margin-bottom: 8px; display: block; }
+  .form-label .icon { margin-right: 6px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 6px 14px; border-radius: 50px; font-size: 0.82rem; font-weight: 500;
+    border: 2px solid #E0E8E2; background: white; cursor: pointer; transition: all 0.2s;
+    color: var(--text-light);
+  }
+  .chip:hover { border-color: var(--green-light); color: var(--green); }
+  .chip.active { background: var(--green); color: white; border-color: var(--green); }
+
+  input[type="range"] { width: 100%; accent-color: var(--green); }
+  .range-labels { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-light); margin-top: 4px; }
+  .budget-display { font-weight: 700; color: var(--green); font-size: 1.1rem; }
+
+  select {
+    width: 100%; padding: 10px 14px; border: 2px solid #E0E8E2; border-radius: 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--text);
+    background: white; cursor: pointer; outline: none;
+  }
+  select:focus { border-color: var(--green-light); }
+
+  .recommend-btn {
+    width: 100%; padding: 14px; background: var(--green); color: white; border: none;
+    border-radius: 14px; font-size: 1rem; font-weight: 700; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all 0.25s; margin-top: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .recommend-btn:hover { background: var(--dark); transform: translateY(-2px); box-shadow: var(--shadow); }
+  .recommend-btn:active { transform: translateY(0); }
+
+  .divider { border: none; border-top: 2px solid var(--green-pale); margin: 24px 0; }
+
+  .browse-btn {
+    width: 100%; padding: 11px; background: var(--green-pale); color: var(--green); border: 2px solid var(--green-pale);
+    border-radius: 14px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+  }
+  .browse-btn:hover { border-color: var(--green); }
+
+  /* CONTENT AREA */
+  .content-area {}
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: var(--dark); }
+  .section-sub { font-size: 0.9rem; color: var(--text-light); margin-top: 3px; }
+  .result-count { font-size: 0.85rem; color: var(--text-light); background: var(--green-pale); padding: 5px 14px; border-radius: 50px; }
+
+  /* AI MESSAGE */
+  .ai-message {
+    background: linear-gradient(135deg, var(--green-pale), #B7E4C7);
+    border-left: 4px solid var(--green);
+    border-radius: 12px; padding: 14px 18px;
+    font-size: 0.9rem; color: var(--dark); margin-bottom: 24px;
+    display: none; align-items: center; gap: 10px;
+  }
+  .ai-message.show { display: flex; }
+
+  /* PRODUCTS GRID */
+  .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
+
+  .product-card {
+    background: white; border-radius: 18px; overflow: hidden;
+    box-shadow: var(--shadow); transition: all 0.25s; cursor: pointer;
+    border: 2px solid transparent;
+  }
+  .product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--green-pale); }
+  .product-card.recommended { border-color: var(--green-light); }
+
+  .card-emoji {
+    background: var(--green-pale); height: 110px;
+    display: flex; align-items: center; justify-content: center; font-size: 3rem;
+    position: relative;
+  }
+  .match-badge {
+    position: absolute; top: 10px; right: 10px;
+    background: var(--green); color: white; font-size: 0.7rem; font-weight: 700;
+    padding: 3px 9px; border-radius: 50px;
+  }
+  .ai-pick-badge {
+    position: absolute; top: 10px; left: 10px;
+    background: var(--gold); color: var(--dark); font-size: 0.65rem; font-weight: 700;
+    padding: 3px 8px; border-radius: 50px;
+  }
+
+  .card-body { padding: 16px; }
+  .card-category { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); font-weight: 600; margin-bottom: 5px; }
+  .card-name { font-weight: 700; font-size: 0.95rem; color: var(--dark); margin-bottom: 8px; line-height: 1.3; }
+  .card-rating { font-size: 0.82rem; color: var(--gold); margin-bottom: 10px; }
+  .card-rating span { color: var(--text-light); }
+
+  .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--green-pale); }
+  .card-price { font-weight: 700; font-size: 1.05rem; color: var(--green); }
+  .card-price small { font-size: 0.75rem; color: var(--text-light); font-weight: 400; }
+
+  .add-btn {
+    background: var(--green); color: white; border: none; width: 34px; height: 34px;
+    border-radius: 10px; font-size: 1.3rem; cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .add-btn:hover { background: var(--dark); transform: scale(1.1); }
+  .add-btn.added { background: var(--gold); color: var(--dark); }
+
+  /* LOADING */
+  .loading { display: none; text-align: center; padding: 60px 20px; }
+  .loading.show { display: block; }
+  .spinner {
+    width: 50px; height: 50px; border: 4px solid var(--green-pale);
+    border-top-color: var(--green); border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state { text-align: center; padding: 80px 20px; color: var(--text-light); }
+  .empty-state .big { font-size: 4rem; margin-bottom: 16px; }
+  .empty-state h3 { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--dark); margin-bottom: 8px; }
+
+  /* CART MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200;
+    display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white; border-radius: 24px; width: 90%; max-width: 500px;
+    max-height: 80vh; overflow: hidden; display: flex; flex-direction: column;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.25);
+  }
+  .modal-header {
+    padding: 24px 28px; border-bottom: 2px solid var(--green-pale);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; }
+  .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-light); }
+  .modal-body { flex: 1; overflow-y: auto; padding: 20px 28px; }
+  .cart-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 0; border-bottom: 1px solid var(--green-pale);
+  }
+  .cart-item-emoji { font-size: 2rem; width: 48px; text-align: center; }
+  .cart-item-info { flex: 1; }
+  .cart-item-name { font-weight: 600; font-size: 0.9rem; }
+  .cart-item-price { font-size: 0.85rem; color: var(--text-light); margin-top: 3px; }
+  .cart-item-qty { font-size: 0.8rem; background: var(--green-pale); color: var(--green); padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  .remove-item { background: none; border: none; color: var(--red); cursor: pointer; font-size: 1.1rem; }
+  .modal-footer {
+    padding: 20px 28px; border-top: 2px solid var(--green-pale);
+    background: var(--cream);
+  }
+  .cart-total { display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 700; margin-bottom: 14px; }
+  .checkout-btn {
+    width: 100%; padding: 14px; background: var(--green); color: white; border: none;
+    border-radius: 14px; font-size: 1rem; font-weight: 700; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+  }
+  .checkout-btn:hover { background: var(--dark); }
+  .cart-empty { text-align: center; padding: 40px; color: var(--text-light); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 30px; right: 30px; background: var(--dark); color: white;
+    padding: 14px 22px; border-radius: 12px; font-size: 0.9rem; font-weight: 500;
+    transform: translateY(80px); opacity: 0; transition: all 0.3s; z-index: 300;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .ai-panel { position: static; }
+    .hero h1 { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Fresh<span>Mind</span> AI</div>
+  <div class="header-right">
+    <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">🌿 AI-Powered Grocery</span>
+    <button class="cart-btn" onclick="openCart()">
+      🛒 My Cart <div class="cart-count" id="cart-count">0</div>
+    </button>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="ai-badge"><div class="ai-dot"></div> AI-Powered Recommendations</div>
+  <h1>Shop Smarter with<br><span>Artificial Intelligence</span></h1>
+  <p>Tell us your preferences — our AI engine finds the perfect groceries for you</p>
+</div>
+
+<div class="main">
+  <!-- AI PANEL -->
+  <div class="ai-panel">
+    <div class="panel-title">🤖 AI Profile Setup</div>
+    <div class="panel-sub">Configure your preferences for personalized recommendations</div>
+
+    <div class="form-group">
+      <label class="form-label"><span class="icon">🎯</span> Health Goals</label>
+      <div class="chips" id="goals-chips">
+        <div class="chip" data-val="weight-loss" onclick="toggleChip(this, 'goals')">Weight Loss</div>
+        <div class="chip" data-val="muscle-gain" onclick="toggleChip(this, 'goals')">Muscle Gain</div>
+        <div class="chip" data-val="family" onclick="toggleChip(this, 'goals')">Family Meals</div>
+        <div class="chip" data-val="energy" onclick="toggleChip(this, 'goals')">Energy Boost</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label"><span class="icon">❤️</span> Food Preferences</label>
+      <div class="chips" id="prefs-chips">
+        <div class="chip" data-val="healthy" onclick="toggleChip(this, 'prefs')">Healthy</div>
+        <div class="chip" data-val="protein" onclick="toggleChip(this, 'prefs')">High Protein</div>
+        <div class="chip" data-val="fiber" onclick="toggleChip(this, 'prefs')">High Fiber</div>
+        <div class="chip" data-val="breakfast" onclick="toggleChip(this, 'prefs')">Breakfast</div>
+        <div class="chip" data-val="snack" onclick="toggleChip(this, 'prefs')">Snacks</div>
+        <div class="chip" data-val="probiotic" onclick="toggleChip(this, 'prefs')">Probiotic</div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label"><span class="icon">💰</span> Max Item Budget: <span class="budget-display" id="budget-label">Rs. 500</span></label>
+      <input type="range" min="100" max="1500" value="500" step="50" id="budget-slider" oninput="updateBudget(this.value)">
+      <div class="range-labels"><span>Rs. 100</span><span>Rs. 1500</span></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label"><span class="icon">👨‍👩‍👧‍👦</span> Family Size</label>
+      <select id="family-size">
+        <option value="1">1 Person</option>
+        <option value="2" selected>2 People</option>
+        <option value="4">4 People (Family)</option>
+        <option value="6">6+ People (Large Family)</option>
+      </select>
+    </div>
+
+    <button class="recommend-btn" onclick="getRecommendations()">
+      🧠 Get AI Recommendations
+    </button>
+
+    <hr class="divider">
+    <button class="browse-btn" onclick="browseAll()">🛍️ Browse All Products</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content-area">
+    <div class="section-header">
+      <div>
+        <div class="section-title" id="section-title">Welcome to FreshMind AI</div>
+        <div class="section-sub" id="section-sub">Set your preferences and get personalized grocery picks</div>
+      </div>
+      <div class="result-count" id="result-count" style="display:none"></div>
+    </div>
+
+    <div class="ai-message" id="ai-message">
+      🤖 <span id="ai-msg-text"></span>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p style="color:var(--text-light); font-weight:500;">AI is analyzing your preferences...</p>
+    </div>
+
+    <div class="empty-state" id="empty-state">
+      <div class="big">🥦</div>
+      <h3>Ready to Shop Smart?</h3>
+      <p>Use the AI panel on the left to get personalized grocery recommendations, or browse all products.</p>
+    </div>
+
+    <div class="products-grid" id="products-grid"></div>
+  </div>
+</div>
+
+<!-- CART MODAL -->
+<div class="modal-overlay" id="cart-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🛒 Your Cart</div>
+      <button class="close-btn" onclick="closeCart()">✕</button>
+    </div>
+    <div class="modal-body" id="cart-body"></div>
+    <div class="modal-footer" id="cart-footer" style="display:none">
+      <div class="cart-total">
+        <span>Total:</span>
+        <span id="cart-total-amount" style="color:var(--green)">Rs. 0</span>
+      </div>
+      <button class="checkout-btn" onclick="checkout()">✅ Place Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✅ <span id="toast-msg"></span></div>
+
+<script>
+let cart = [];
+let selectedGoals = [];
+let selectedPrefs = [];
+let isRecommended = false;
+
+function toggleChip(el, group) {
+  el.classList.toggle('active');
+  const val = el.dataset.val;
+  if (group === 'goals') {
+    if (el.classList.contains('active')) selectedGoals.push(val);
+    else selectedGoals = selectedGoals.filter(v => v !== val);
+  } else {
+    if (el.classList.contains('active')) selectedPrefs.push(val);
+    else selectedPrefs = selectedPrefs.filter(v => v !== val);
+  }
+}
+
+function updateBudget(val) {
+  document.getElementById('budget-label').textContent = 'Rs. ' + val;
+}
+
+async function getRecommendations() {
+  const budget = document.getElementById('budget-slider').value;
+  const familySize = document.getElementById('family-size').value;
+  
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('products-grid').innerHTML = '';
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('ai-message').classList.remove('show');
+  document.getElementById('result-count').style.display = 'none';
+
+  try {
+    const res = await fetch('/recommend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ preferences: selectedPrefs, budget: parseInt(budget), family_size: parseInt(familySize), health_goals: selectedGoals })
+    });
+    const data = await res.json();
+    
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('section-title').textContent = '✨ AI Recommendations';
+    document.getElementById('section-sub').textContent = 'Personalized just for you based on your profile';
+    document.getElementById('result-count').style.display = 'block';
+    document.getElementById('result-count').textContent = data.recommendations.length + ' products found';
+    
+    document.getElementById('ai-msg-text').textContent = data.ai_message;
+    document.getElementById('ai-message').classList.add('show');
+    
+    isRecommended = true;
+    renderProducts(data.recommendations, true);
+  } catch (e) {
+    document.getElementById('loading').classList.remove('show');
+    showToast('Error connecting to AI. Please try again.');
+  }
+}
+
+async function browseAll() {
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('products-grid').innerHTML = '';
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('ai-message').classList.remove('show');
+
+  const res = await fetch('/all-products');
+  const data = await res.json();
+  
+  document.getElementById('loading').classList.remove('show');
+  document.getElementById('section-title').textContent = '🛍️ All Products';
+  document.getElementById('section-sub').textContent = 'Browse our complete fresh grocery collection';
+  document.getElementById('result-count').style.display = 'block';
+  document.getElementById('result-count').textContent = data.length + ' products';
+  isRecommended = false;
+  renderProducts(data, false);
+}
+
+function renderProducts(products, recommended) {
+  const grid = document.getElementById('products-grid');
+  grid.innerHTML = '';
+  
+  if (products.length === 0) {
+    document.getElementById('empty-state').style.display = 'block';
+    return;
+  }
+
+  products.forEach((p, idx) => {
+    const stars = '★'.repeat(Math.floor(p.rating)) + (p.rating % 1 >= 0.5 ? '½' : '');
+    const card = document.createElement('div');
+    card.className = 'product-card' + (recommended ? ' recommended' : '');
+    card.innerHTML = `
+      <div class="card-emoji">
+        ${p.emoji}
+        ${recommended && idx < 3 ? '<div class="ai-pick-badge">🧠 AI Pick</div>' : ''}
+        ${p.match_score ? '<div class="match-badge">' + p.match_score.toFixed(0) + '% match</div>' : ''}
+      </div>
+      <div class="card-body">
+        <div class="card-category">${p.category}</div>
+        <div class="card-name">${p.name}</div>
+        <div class="card-rating">${stars} <span>${p.rating} · In Stock: ${p.stock}</span></div>
+        <div class="card-footer">
+          <div class="card-price">Rs. ${p.price} <small>/ unit</small></div>
+          <button class="add-btn" id="btn-${p.id}" onclick="addToCart(${p.id}, event)">+</button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+async function addToCart(productId, e) {
+  e.stopPropagation();
+  const btn = document.getElementById('btn-' + productId);
+  btn.classList.add('added');
+  btn.textContent = '✓';
+  setTimeout(() => { btn.classList.remove('added'); btn.textContent = '+'; }, 1500);
+
+  const res = await fetch('/cart/add', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ product_id: productId })
+  });
+  const data = await res.json();
+  cart = data.cart;
+  updateCartCount();
+  showToast(data.message);
+}
+
+async function openCart() {
+  const res = await fetch('/cart');
+  const data = await res.json();
+  cart = data.cart;
+  
+  const body = document.getElementById('cart-body');
+  const footer = document.getElementById('cart-footer');
+  
+  if (cart.length === 0) {
+    body.innerHTML = '<div class="cart-empty"><div style="font-size:3rem">🛒</div><p style="margin-top:12px">Your cart is empty!<br>Add some groceries first.</p></div>';
+    footer.style.display = 'none';
+  } else {
+    body.innerHTML = cart.map(item => `
+      <div class="cart-item">
+        <div class="cart-item-emoji">${item.emoji}</div>
+        <div class="cart-item-info">
+          <div class="cart-item-name">${item.name}</div>
+          <div class="cart-item-price">Rs. ${item.price} × <span class="cart-item-qty">${item.qty}</span> = <strong>Rs. ${item.price * item.qty}</strong></div>
+        </div>
+        <button class="remove-item" onclick="removeItem(${item.id})">🗑</button>
+      </div>
+    `).join('');
+    document.getElementById('cart-total-amount').textContent = 'Rs. ' + data.total;
+    footer.style.display = 'block';
+  }
+  
+  document.getElementById('cart-modal').classList.add('open');
+}
+
+async function removeItem(id) {
+  const res = await fetch('/cart/remove', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ product_id: id })
+  });
+  const data = await res.json();
+  cart = data.cart;
+  updateCartCount();
+  openCart();
+}
+
+function closeCart() { document.getElementById('cart-modal').classList.remove('open'); }
+document.getElementById('cart-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeCart(); });
+
+function updateCartCount() {
+  const total = cart.reduce((s, i) => s + i.qty, 0);
+  document.getElementById('cart-count').textContent = total;
+}
+
+function checkout() {
+  closeCart();
+  cart = [];
+  fetch('/cart');
+  document.getElementById('cart-count').textContent = '0';
+  showToast('🎉 Order placed successfully! Thank you!');
+  setTimeout(() => location.reload(), 2000);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
